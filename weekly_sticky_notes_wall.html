@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weekly Sticky Notes Wall</title>
+  <style>
+    :root {
+      /* Warm creative cork / studio wall palette */
+      --wall-bg: #f3ece1;
+      --wall-dot: #d6c8b4;
+      --wall-accent: #e5dac9;
+      --header-bg: rgba(248, 243, 235, 0.88);
+      --text-ink: #1e293b;
+      --text-muted: #475569;
+      --text-faint: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --danger: #dc2626;
+      --success: #059669;
+      --border-soft: rgba(30, 41, 59, 0.12);
+      --shadow-note: 0 10px 20px -5px rgba(45, 35, 20, 0.14), 0 4px 8px -2px rgba(45, 35, 20, 0.08);
+      --shadow-note-hover: 0 18px 28px -6px rgba(45, 35, 20, 0.2), 0 8px 14px -4px rgba(45, 35, 20, 0.12);
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-note: "Comic Sans MS", "Chalkboard SE", "Marker Felt", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--wall-bg);
+      background-image:
+        radial-gradient(var(--wall-dot) 1.35px, transparent 1.35px),
+        radial-gradient(rgba(180, 155, 120, 0.12) 1px, transparent 1px);
+      background-size: 24px 24px, 12px 12px;
+      background-position: 0 0, 6px 6px;
+      color: var(--text-ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Buttons & Controls */
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      border: 1px solid transparent;
+      transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+      background: none;
+      color: var(--text-ink);
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    button:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    .btn-primary {
+      background-color: #1e293b;
+      color: #fef08a;
+      box-shadow: 0 4px 10px rgba(30, 41, 59, 0.18);
+    }
+    .btn-primary:hover {
+      background-color: #0f172a;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background-color: rgba(255, 255, 255, 0.85);
+      border-color: var(--border-soft);
+      color: var(--text-ink);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+    }
+    .btn-secondary:hover {
+      background-color: #ffffff;
+    }
+
+    .btn-danger-icon {
+      padding: 6px;
+      border-radius: 8px;
+      color: rgba(30, 41, 59, 0.55);
+      background: rgba(255, 255, 255, 0.35);
+    }
+    .btn-danger-icon:hover {
+      color: var(--danger);
+      background: rgba(254, 226, 226, 0.9);
+    }
+
+    /* Sticky Top Header */
+    .header-bar {
+      background: var(--header-bg);
+      backdrop-filter: blur(10px);
+      border-bottom: 2px solid rgba(168, 148, 120, 0.25);
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 64px;
+      flex-wrap: wrap;
+    }
+
+    .brand-title {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-badge {
+      background: #fef08a;
+      border: 1px solid rgba(30, 41, 59, 0.15);
+      padding: 4px 10px;
+      border-radius: 8px;
+      transform: rotate(-2deg);
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
+      font-size: 18px;
+    }
+
+    .container {
+      max-width: 1360px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 28px 22px 48px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Saved Status Pill */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.75);
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      opacity: 0;
+      transition: opacity 0.25s ease;
+      user-select: none;
+    }
+    .status-badge.visible {
+      opacity: 1;
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: var(--success);
+    }
+
+    /* Adhesive Tape Visual Accent */
+    .sticky-tape {
+      position: absolute;
+      top: -11px;
+      left: 50%;
+      transform: translateX(-50%) rotate(-1.5deg);
+      width: 78px;
+      height: 22px;
+      background: rgba(255, 255, 255, 0.52);
+      border-left: 1px dashed rgba(0, 0, 0, 0.08);
+      border-right: 1px dashed rgba(0, 0, 0, 0.08);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* Color Swatches */
+    .color-swatches {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .swatch-dot {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(30, 41, 59, 0.28);
+      padding: 0;
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    .swatch-dot:hover {
+      transform: scale(1.22);
+    }
+    .swatch-dot.active {
+      border: 2px solid #1e293b;
+      transform: scale(1.18);
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);
+    }
+
+    /* ================= HOME VIEW (WEEKS WALL) ================= */
+    #home-view {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .wall-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .weeks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(295px, 1fr));
+      gap: 28px;
+      padding-top: 8px;
+    }
+
+    .week-sticky-card {
+      position: relative;
+      border-radius: 4px 4px 18px 4px;
+      padding: 24px 20px 18px;
+      cursor: pointer;
+      box-shadow: var(--shadow-note);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 215px;
+      border: 1px solid rgba(30, 41, 59, 0.1);
+      transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease, background-color 0.2s ease;
+    }
+
+    /* Subtle folded corner shadow effect */
+    .week-sticky-card::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 24px;
+      height: 24px;
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.06) 45%, rgba(255, 255, 255, 0.45) 50%, transparent 55%);
+      border-bottom-right-radius: 18px;
+      pointer-events: none;
+    }
+
+    .week-sticky-card:nth-child(odd) {
+      transform: rotate(-1.1deg);
+    }
+    .week-sticky-card:nth-child(even) {
+      transform: rotate(1deg);
+    }
+    .week-sticky-card:nth-child(3n) {
+      transform: rotate(-0.6deg);
+    }
+
+    .week-sticky-card:hover,
+    .week-sticky-card:focus-within {
+      transform: rotate(0deg) translateY(-5px) scale(1.015);
+      box-shadow: var(--shadow-note-hover);
+      z-index: 5;
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .card-title-input {
+      font-family: inherit;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-ink);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding: 4px 6px;
+      margin-left: -6px;
+      width: 100%;
+      outline: none;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .card-title-input:hover {
+      background: rgba(255, 255, 255, 0.42);
+    }
+    .card-title-input:focus {
+      background: rgba(255, 255, 255, 0.8);
+      border-color: rgba(30, 41, 59, 0.3);
+    }
+
+    .card-preview {
+      font-family: var(--font-note);
+      font-size: 14px;
+      color: rgba(15, 23, 42, 0.82);
+      line-height: 1.5;
+      margin-bottom: 16px;
+      flex-grow: 1;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      word-break: break-word;
+    }
+    .card-preview.empty {
+      color: rgba(15, 23, 42, 0.5);
+      font-style: italic;
+    }
+
+    .card-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      border-top: 1px dashed rgba(30, 41, 59, 0.18);
+      padding-top: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .days-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.55);
+      padding: 4px 9px;
+      border-radius: 999px;
+      color: var(--text-ink);
+    }
+
+    /* Empty State Sticky Note */
+    .empty-state-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 48px 16px;
+    }
+
+    .empty-sticky-note {
+      position: relative;
+      background: #fef08a;
+      max-width: 420px;
+      width: 100%;
+      padding: 36px 28px 30px;
+      border-radius: 4px 4px 20px 4px;
+      box-shadow: var(--shadow-note);
+      text-align: center;
+      transform: rotate(-1.5deg);
+      border: 1px solid rgba(30, 41, 59, 0.12);
+    }
+
+    .empty-icon {
+      font-size: 44px;
+      margin-bottom: 12px;
+    }
+
+    .empty-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .empty-text {
+      font-family: var(--font-note);
+      font-size: 15px;
+      color: rgba(15, 23, 42, 0.8);
+      line-height: 1.5;
+      margin-bottom: 22px;
+    }
+
+    /* ================= 7-DAY STICKY BOARD VIEW ================= */
+    #week-view {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .week-view-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 220px;
+    }
+
+    .week-view-title-input {
+      font-family: inherit;
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--text-ink);
+      background: rgba(255, 255, 255, 0.55);
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 6px 10px;
+      width: 100%;
+      max-width: 380px;
+      outline: none;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .week-view-title-input:hover {
+      background: rgba(255, 255, 255, 0.9);
+    }
+    .week-view-title-input:focus {
+      background: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .week-view-header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* Mode Switcher Pill */
+    .mode-switch {
+      display: inline-flex;
+      background: rgba(30, 41, 59, 0.08);
+      padding: 3px;
+      border-radius: 10px;
+      gap: 2px;
+    }
+
+    .mode-btn {
+      padding: 5px 11px;
+      font-size: 13px;
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .mode-btn.active {
+      background: #ffffff;
+      color: var(--text-ink);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 7-Note Sticky Wall Grid */
+    .sticky-board-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 26px;
+      padding-top: 10px;
+    }
+
+    .day-sticky-note {
+      position: relative;
+      border-radius: 3px 3px 16px 3px;
+      padding: 22px 18px 14px;
+      box-shadow: var(--shadow-note);
+      border: 1px solid rgba(30, 41, 59, 0.1);
+      display: flex;
+      flex-direction: column;
+      min-height: 270px;
+      transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease, background-color 0.2s ease;
+    }
+
+    .day-sticky-note:nth-child(1) { transform: rotate(-1.2deg); }
+    .day-sticky-note:nth-child(2) { transform: rotate(0.9deg); }
+    .day-sticky-note:nth-child(3) { transform: rotate(-0.7deg); }
+    .day-sticky-note:nth-child(4) { transform: rotate(1.1deg); }
+    .day-sticky-note:nth-child(5) { transform: rotate(-0.9deg); }
+    .day-sticky-note:nth-child(6) { transform: rotate(0.8deg); }
+    .day-sticky-note:nth-child(7) { transform: rotate(-1.1deg); }
+
+    .day-sticky-note:hover,
+    .day-sticky-note:focus-within {
+      transform: rotate(0deg) translateY(-4px) scale(1.01);
+      box-shadow: var(--shadow-note-hover);
+      z-index: 6;
+    }
+
+    .day-note-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+      border-bottom: 1.5px dashed rgba(30, 41, 59, 0.16);
+    }
+
+    .day-note-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .day-note-textarea {
+      flex: 1;
+      width: 100%;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-family: var(--font-note);
+      font-size: 15px;
+      line-height: 1.6;
+      color: #0f172a;
+      resize: vertical;
+      min-height: 165px;
+      /* Subtle ruled lines on sticky note */
+      background-image: linear-gradient(to bottom, transparent 23px, rgba(30, 41, 59, 0.07) 24px);
+      background-size: 100% 24px;
+    }
+    .day-note-textarea::placeholder {
+      color: rgba(15, 23, 42, 0.42);
+    }
+
+    .day-note-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 8px;
+      margin-top: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(15, 23, 42, 0.6);
+    }
+
+    .focus-expand-btn {
+      padding: 3px 7px;
+      font-size: 11px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.45);
+      color: var(--text-ink);
+    }
+    .focus-expand-btn:hover {
+      background: rgba(255, 255, 255, 0.85);
+    }
+
+    /* ================= FOCUS SINGLE STICKY NOTE VIEW ================= */
+    #focus-view-container {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      max-width: 780px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .focus-day-tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 2px 14px;
+      margin-bottom: 10px;
+      scrollbar-width: thin;
+    }
+
+    .focus-tab {
+      border-radius: 10px 10px 4px 4px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      border: 1px solid rgba(30, 41, 59, 0.15);
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.06);
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      white-space: nowrap;
+      opacity: 0.82;
+    }
+    .focus-tab:hover {
+      opacity: 1;
+      transform: translateY(-2px);
+    }
+    .focus-tab.active {
+      opacity: 1;
+      transform: translateY(-3px) scale(1.03);
+      border: 2px solid #1e293b;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
+    }
+
+    .tab-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #1e293b;
+      opacity: 0;
+    }
+    .tab-dot.has-content {
+      opacity: 0.75;
+    }
+
+    .focus-sticky-sheet {
+      position: relative;
+      flex: 1;
+      min-height: 460px;
+      border-radius: 4px 4px 24px 4px;
+      padding: 28px 26px 20px;
+      box-shadow: var(--shadow-note-hover);
+      border: 1px solid rgba(30, 41, 59, 0.12);
+      display: flex;
+      flex-direction: column;
+      transition: background-color 0.2s ease;
+    }
+
+    .focus-sheet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+      border-bottom: 2px dashed rgba(30, 41, 59, 0.16);
+    }
+
+    .focus-sheet-title {
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .focus-textarea {
+      flex: 1;
+      width: 100%;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-family: var(--font-note);
+      font-size: 17px;
+      line-height: 28px;
+      color: #0f172a;
+      resize: none;
+      background-image: linear-gradient(to bottom, transparent 27px, rgba(30, 41, 59, 0.08) 28px);
+      background-size: 100% 28px;
+    }
+    .focus-textarea::placeholder {
+      color: rgba(15, 23, 42, 0.42);
+    }
+
+    .focus-sheet-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 10px;
+      margin-top: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(15, 23, 42, 0.65);
+    }
+
+    /* Custom Confirm Modal (No window.confirm/alert) */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(3px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 90;
+      padding: 16px;
+    }
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-sticky-card {
+      position: relative;
+      background: #fecdd3;
+      max-width: 380px;
+      width: 100%;
+      padding: 28px 24px 22px;
+      border-radius: 4px 4px 18px 4px;
+      box-shadow: 0 20px 35px rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(30, 41, 59, 0.15);
+      transform: rotate(-1deg);
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .modal-body {
+      font-size: 14px;
+      line-height: 1.5;
+      color: rgba(15, 23, 42, 0.85);
+      margin-bottom: 20px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .btn-modal-delete {
+      background: #dc2626;
+      color: #ffffff;
+    }
+    .btn-modal-delete:hover {
+      background: #b91c1c;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1e293b;
+      color: #fef08a;
+      padding: 11px 18px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22);
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: all 0.25s ease;
+      z-index: 100;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 640px) {
+      .header-bar {
+        padding: 10px 14px;
+      }
+      .container {
+        padding: 18px 14px 36px;
+      }
+      .week-view-title-input {
+        font-size: 16px;
+      }
+      .sticky-board-grid,
+      .weeks-grid {
+        gap: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Home View Header -->
+  <header id="home-header" class="header-bar">
+    <div class="brand-title">
+      <span class="brand-badge">📌</span>
+      <span>Weekly Sticky Wall</span>
+    </div>
+    <button id="new-week-btn" class="btn-primary" type="button">
+      <span>+ New Week Note</span>
+    </button>
+  </header>
+
+  <!-- 7-Day Board Header -->
+  <header id="week-header" class="header-bar" style="display: none;">
+    <div class="week-view-header-left">
+      <button id="back-to-weeks-btn" class="btn-secondary" type="button" title="Back to Sticky Wall">
+        <span>← Wall</span>
+      </button>
+      <input type="text" id="week-title-heading" class="week-view-title-input" aria-label="Week title" spellcheck="false" />
+    </div>
+
+    <div class="week-view-header-right">
+      <div id="save-status" class="status-badge" aria-live="polite">
+        <span class="status-dot"></span>
+        <span>Saved</span>
+      </div>
+
+      <div class="mode-switch" role="group" aria-label="Board layout mode">
+        <button id="mode-board-btn" class="mode-btn active" type="button">7-Note Wall</button>
+        <button id="mode-focus-btn" class="mode-btn" type="button">Focus Note</button>
+      </div>
+
+      <button id="copy-week-btn" class="btn-secondary" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        <span>Copy Week</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="container">
+    <!-- Home View (Weeks Wall) -->
+    <section id="home-view">
+      <div id="wall-subtitle" class="wall-subtitle">
+        <span>Pin a sticky note stack for every week. Click a note to open its 7-day board.</span>
+      </div>
+      <div id="weeks-list" class="weeks-grid"></div>
+
+      <div id="empty-state" class="empty-state-wrapper" style="display: none;">
+        <div class="empty-sticky-note">
+          <div class="sticky-tape"></div>
+          <div class="empty-icon">🗒️</div>
+          <h2 class="empty-title">Your sticky wall is empty!</h2>
+          <p class="empty-text">Stick your first colorful week onto the wall to plan Monday through Sunday.</p>
+          <button id="empty-new-week-btn" class="btn-primary" type="button">+ Pin First Week</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Inside a Week View -->
+    <section id="week-view">
+      <!-- 7-Note Wall Mode -->
+      <div id="sticky-board-grid" class="sticky-board-grid"></div>
+
+      <!-- Focus Single Sticky Mode -->
+      <div id="focus-view-container">
+        <nav id="focus-day-tabs" class="focus-day-tabs" aria-label="Days of the week"></nav>
+        <div id="focus-sticky-sheet" class="focus-sticky-sheet">
+          <div class="sticky-tape"></div>
+          <div class="focus-sheet-header">
+            <span id="focus-day-label" class="focus-sheet-title">Monday</span>
+            <div id="focus-color-swatches" class="color-swatches" aria-label="Note color"></div>
+          </div>
+          <textarea id="focus-textarea" class="focus-textarea" spellcheck="true" placeholder="Jot down sticky notes for Monday..."></textarea>
+          <div class="focus-sheet-footer">
+            <span id="focus-word-count">0 words · 0 chars</span>
+            <span>Auto-saved to wall</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Delete Confirmation Sticky Modal -->
+  <div id="delete-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-sticky-card">
+      <div class="sticky-tape"></div>
+      <h3 id="modal-title" class="modal-title">Unpin & delete week?</h3>
+      <p id="modal-body" class="modal-body">Are you sure you want to remove this weekly sticky stack?</p>
+      <div class="modal-actions">
+        <button id="modal-cancel-btn" class="btn-secondary" type="button">Keep Note</button>
+        <button id="modal-confirm-btn" class="btn-modal-delete" type="button">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const STORAGE_KEY = 'weekly_sticky_notes_data';
+      const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+      // Curated vibrant pastel sticky note colors
+      const STICKY_COLORS = [
+        { name: 'Canary Yellow', hex: '#fef08a' },
+        { name: 'Mint Green',    hex: '#bbf7d0' },
+        { name: 'Sky Blue',      hex: '#bae6fd' },
+        { name: 'Coral Pink',    hex: '#fecdd3' },
+        { name: 'Lavender',      hex: '#e9d5ff' },
+        { name: 'Peach Orange',  hex: '#fed7aa' },
+        { name: 'Lemon Lime',    hex: '#d9f99d' }
+      ];
+
+      // Default rainbow progression for Monday -> Sunday
+      const DEFAULT_DAY_COLORS = {
+        Monday:    '#fef08a',
+        Tuesday:   '#bbf7d0',
+        Wednesday: '#bae6fd',
+        Thursday:  '#fecdd3',
+        Friday:    '#e9d5ff',
+        Saturday:  '#fed7aa',
+        Sunday:    '#d9f99d'
+      };
+
+      // Application State
+      let weeks = [];
+      let currentWeekId = null;
+      let currentDay = 'Monday';
+      let viewMode = 'board'; // 'board' | 'focus'
+      let pendingDeleteWeekId = null;
+      let saveTimeout = null;
+
+      // DOM References
+      const homeHeader = document.getElementById('home-header');
+      const weekHeader = document.getElementById('week-header');
+      const homeView = document.getElementById('home-view');
+      const weekView = document.getElementById('week-view');
+      const wallSubtitle = document.getElementById('wall-subtitle');
+      const weeksList = document.getElementById('weeks-list');
+      const emptyState = document.getElementById('empty-state');
+      const newWeekBtn = document.getElementById('new-week-btn');
+      const emptyNewWeekBtn = document.getElementById('empty-new-week-btn');
+      const backToWeeksBtn = document.getElementById('back-to-weeks-btn');
+      const weekTitleHeading = document.getElementById('week-title-heading');
+      const copyWeekBtn = document.getElementById('copy-week-btn');
+      const saveStatus = document.getElementById('save-status');
+
+      const modeBoardBtn = document.getElementById('mode-board-btn');
+      const modeFocusBtn = document.getElementById('mode-focus-btn');
+      const stickyBoardGrid = document.getElementById('sticky-board-grid');
+      const focusViewContainer = document.getElementById('focus-view-container');
+      const focusDayTabs = document.getElementById('focus-day-tabs');
+      const focusStickySheet = document.getElementById('focus-sticky-sheet');
+      const focusDayLabel = document.getElementById('focus-day-label');
+      const focusColorSwatches = document.getElementById('focus-color-swatches');
+      const focusTextarea = document.getElementById('focus-textarea');
+      const focusWordCount = document.getElementById('focus-word-count');
+
+      const deleteModal = document.getElementById('delete-modal');
+      const modalBody = document.getElementById('modal-body');
+      const modalCancelBtn = document.getElementById('modal-cancel-btn');
+      const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+      const toastEl = document.getElementById('toast');
+
+      // Validate hex color against allowed sticky palette
+      function sanitizeColor(hex, fallback) {
+        const found = STICKY_COLORS.find(c => c.hex.toLowerCase() === String(hex || '').toLowerCase());
+        return found ? found.hex : fallback;
+      }
+
+      // Safe localStorage load with backward compatibility
+      function loadWeeks() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return [];
+          const data = JSON.parse(raw);
+          if (!Array.isArray(data)) return [];
+          return data.map((item, idx) => {
+            const daysObj = {};
+            const dayColorsObj = {};
+            DAYS.forEach(day => {
+              daysObj[day] = (item.days && typeof item.days[day] === 'string') ? item.days[day] : '';
+              const rawDayColor = item.dayColors && item.dayColors[day];
+              dayColorsObj[day] = sanitizeColor(rawDayColor, DEFAULT_DAY_COLORS[day]);
+            });
+            const defaultCardColor = STICKY_COLORS[idx % STICKY_COLORS.length].hex;
+            return {
+              id: item.id || 'week_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+              title: typeof item.title === 'string' && item.title.trim() ? item.title : 'Untitled Week',
+              createdAt: item.createdAt || Date.now(),
+              color: sanitizeColor(item.color, defaultCardColor),
+              days: daysObj,
+              dayColors: dayColorsObj
+            };
+          });
+        } catch (e) {
+          console.error('Error reading localStorage:', e);
+          return [];
+        }
+      }
+
+      // Safe localStorage save
+      function saveWeeks() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(weeks));
+          showSaveIndicator();
+        } catch (e) {
+          console.error('Error writing localStorage:', e);
+          showToast('Could not save to local storage.');
+        }
+      }
+
+      function showSaveIndicator() {
+        saveStatus.classList.add('visible');
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+          saveStatus.classList.remove('visible');
+        }, 1500);
+      }
+
+      function showToast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add('show');
+        setTimeout(() => {
+          toastEl.classList.remove('show');
+        }, 2300);
+      }
+
+      // Compute Monday–Sunday date range label
+      function computeDefaultWeekTitle() {
+        const now = new Date();
+        const currentDayIdx = now.getDay();
+        const diffToMonday = currentDayIdx === 0 ? -6 : 1 - currentDayIdx;
+        const monday = new Date(now);
+        monday.setDate(now.getDate() + diffToMonday);
+
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+
+        const options = { month: 'short', day: 'numeric' };
+        const monStr = monday.toLocaleDateString(undefined, options);
+        const sunStr = sunday.toLocaleDateString(undefined, options);
+        const year = sunday.getFullYear();
+
+        return `${monStr} – ${sunStr}, ${year}`;
+      }
+
+      function getDaysWithContentCount(week) {
+        return DAYS.reduce((count, day) => {
+          return count + (week.days[day] && week.days[day].trim().length > 0 ? 1 : 0);
+        }, 0);
+      }
+
+      function getWeekPreview(week) {
+        for (const day of DAYS) {
+          const text = week.days[day] ? week.days[day].trim() : '';
+          if (text) {
+            return `${day}: ${text.replace(/\s+/g, ' ')}`;
+          }
+        }
+        return 'Blank sticky stack — click to jot notes!';
+      }
+
+      function formatWordCharCount(text) {
+        const chars = text.length;
+        const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+        return `${words} word${words === 1 ? '' : 's'} · ${chars} char${chars === 1 ? '' : 's'}`;
+      }
+
+      // Build color swatch picker row
+      function buildColorSwatches(activeHex, onSelect) {
+        const wrap = document.createElement('div');
+        wrap.className = 'color-swatches';
+        STICKY_COLORS.forEach(colorObj => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'swatch-dot' + (colorObj.hex.toLowerCase() === activeHex.toLowerCase() ? ' active' : '');
+          btn.style.backgroundColor = colorObj.hex;
+          btn.title = colorObj.name;
+          btn.setAttribute('aria-label', `Color: ${colorObj.name}`);
+          btn.addEventListener('click', e => {
+            e.stopPropagation();
+            onSelect(colorObj.hex);
+          });
+          wrap.appendChild(btn);
+        });
+        return wrap;
+      }
+
+      // Create a new weekly sticky stack
+      function createNewWeek() {
+        const defaultTitle = computeDefaultWeekTitle();
+        let finalTitle = defaultTitle;
+        let count = 2;
+        while (weeks.some(w => w.title.toLowerCase() === finalTitle.toLowerCase())) {
+          finalTitle = `${defaultTitle} (${count++})`;
+        }
+
+        const nextColor = STICKY_COLORS[weeks.length % STICKY_COLORS.length].hex;
+        const newWeek = {
+          id: 'week_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+          title: finalTitle,
+          createdAt: Date.now(),
+          color: nextColor,
+          days: {
+            Monday: '',
+            Tuesday: '',
+            Wednesday: '',
+            Thursday: '',
+            Friday: '',
+            Saturday: '',
+            Sunday: ''
+          },
+          dayColors: Object.assign({}, DEFAULT_DAY_COLORS)
+        };
+
+        weeks.unshift(newWeek);
+        saveWeeks();
+        openWeek(newWeek.id);
+      }
+
+      // Custom delete modal flow
+      function requestDeleteWeek(id) {
+        const target = weeks.find(w => w.id === id);
+        if (!target) return;
+        pendingDeleteWeekId = id;
+        modalBody.textContent = `Are you sure you want to remove "${target.title}" and all 7 of its sticky notes?`;
+        deleteModal.classList.add('open');
+        modalCancelBtn.focus();
+      }
+
+      function closeDeleteModal() {
+        pendingDeleteWeekId = null;
+        deleteModal.classList.remove('open');
+      }
+
+      function confirmDeleteWeek() {
+        if (!pendingDeleteWeekId) return;
+        const id = pendingDeleteWeekId;
+        weeks = weeks.filter(w => w.id !== id);
+        saveWeeks();
+        closeDeleteModal();
+        showToast('Sticky stack removed from wall.');
+        if (currentWeekId === id) {
+          showHomeView();
+        } else {
+          renderHomeView();
+        }
+      }
+
+      // Render Home View (Weeks Wall)
+      function renderHomeView() {
+        weeksList.textContent = '';
+        if (weeks.length === 0) {
+          emptyState.style.display = 'flex';
+          weeksList.style.display = 'none';
+          wallSubtitle.style.display = 'none';
+          return;
+        }
+
+        emptyState.style.display = 'none';
+        weeksList.style.display = 'grid';
+        wallSubtitle.style.display = 'flex';
+
+        weeks.forEach(week => {
+          const card = document.createElement('div');
+          card.className = 'week-sticky-card';
+          card.style.backgroundColor = week.color || '#fef08a';
+          card.tabIndex = 0;
+          card.setAttribute('role', 'button');
+          card.setAttribute('aria-label', `Open week ${week.title}`);
+
+          // Adhesive tape accent
+          const tape = document.createElement('div');
+          tape.className = 'sticky-tape';
+          card.appendChild(tape);
+
+          // Top row: editable title + delete button
+          const cardTop = document.createElement('div');
+          cardTop.className = 'card-top';
+
+          const titleInput = document.createElement('input');
+          titleInput.className = 'card-title-input';
+          titleInput.type = 'text';
+          titleInput.value = week.title;
+          titleInput.title = 'Click to rename week';
+          titleInput.setAttribute('aria-label', 'Edit week title');
+
+          titleInput.addEventListener('click', e => e.stopPropagation());
+          titleInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') titleInput.blur();
+          });
+          titleInput.addEventListener('input', e => {
+            week.title = e.target.value.trim() || 'Untitled Week';
+            saveWeeks();
+          });
+          titleInput.addEventListener('blur', e => {
+            if (!e.target.value.trim()) {
+              e.target.value = 'Untitled Week';
+              week.title = 'Untitled Week';
+              saveWeeks();
+            }
+          });
+
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'btn-danger-icon';
+          deleteBtn.type = 'button';
+          deleteBtn.title = 'Unpin & delete week';
+          deleteBtn.setAttribute('aria-label', `Delete ${week.title}`);
+          deleteBtn.innerHTML = `
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+          `;
+          deleteBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            requestDeleteWeek(week.id);
+          });
+
+          cardTop.appendChild(titleInput);
+          cardTop.appendChild(deleteBtn);
+
+          // Preview text
+          const preview = document.createElement('div');
+          preview.className = 'card-preview';
+          const previewText = getWeekPreview(week);
+          preview.textContent = previewText;
+          if (previewText.startsWith('Blank sticky stack')) {
+            preview.classList.add('empty');
+          }
+
+          // Bottom row: color swatches + days written badge
+          const cardBottom = document.createElement('div');
+          cardBottom.className = 'card-bottom';
+
+          const swatches = buildColorSwatches(week.color, newHex => {
+            week.color = newHex;
+            saveWeeks();
+            renderHomeView();
+          });
+
+          const daysCount = getDaysWithContentCount(week);
+          const badge = document.createElement('div');
+          badge.className = 'days-badge';
+          badge.textContent = `${daysCount}/7 days`;
+
+          cardBottom.appendChild(swatches);
+          cardBottom.appendChild(badge);
+
+          card.appendChild(cardTop);
+          card.appendChild(preview);
+          card.appendChild(cardBottom);
+
+          card.addEventListener('click', () => {
+            openWeek(week.id);
+          });
+          card.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && e.target === card) {
+              openWeek(week.id);
+            }
+          });
+
+          weeksList.appendChild(card);
+        });
+      }
+
+      // Open a week's 7-Day Sticky Board
+      function openWeek(weekId) {
+        const week = weeks.find(w => w.id === weekId);
+        if (!week) return;
+
+        currentWeekId = weekId;
+        currentDay = 'Monday';
+
+        homeHeader.style.display = 'none';
+        weekHeader.style.display = 'flex';
+        homeView.style.display = 'none';
+        weekView.style.display = 'flex';
+
+        weekTitleHeading.value = week.title;
+        setViewMode(viewMode);
+        window.scrollTo(0, 0);
+      }
+
+      function showHomeView() {
+        currentWeekId = null;
+        homeHeader.style.display = 'flex';
+        weekHeader.style.display = 'none';
+        homeView.style.display = 'flex';
+        weekView.style.display = 'none';
+        renderHomeView();
+      }
+
+      // Switch between 7-Note Wall and Focus Note
+      function setViewMode(mode) {
+        viewMode = mode;
+        modeBoardBtn.classList.toggle('active', mode === 'board');
+        modeFocusBtn.classList.toggle('active', mode === 'focus');
+
+        if (mode === 'board') {
+          stickyBoardGrid.style.display = 'grid';
+          focusViewContainer.style.display = 'none';
+          renderSevenNoteBoard();
+        } else {
+          stickyBoardGrid.style.display = 'none';
+          focusViewContainer.style.display = 'flex';
+          renderFocusView();
+        }
+      }
+
+      // Render all 7 days as colorful sticky notes on the board
+      function renderSevenNoteBoard() {
+        const week = weeks.find(w => w.id === currentWeekId);
+        if (!week) return;
+
+        stickyBoardGrid.textContent = '';
+
+        DAYS.forEach(day => {
+          const noteColor = (week.dayColors && week.dayColors[day]) || DEFAULT_DAY_COLORS[day];
+
+          const noteCard = document.createElement('article');
+          noteCard.className = 'day-sticky-note';
+          noteCard.style.backgroundColor = noteColor;
+
+          // Adhesive tape strip
+          const tape = document.createElement('div');
+          tape.className = 'sticky-tape';
+          noteCard.appendChild(tape);
+
+          // Note header: Day name + Color swatches
+          const header = document.createElement('div');
+          header.className = 'day-note-header';
+
+          const dayLabel = document.createElement('h2');
+          dayLabel.className = 'day-note-title';
+          dayLabel.textContent = day;
+
+          const swatches = buildColorSwatches(noteColor, newHex => {
+            week.dayColors[day] = newHex;
+            saveWeeks();
+            noteCard.style.backgroundColor = newHex;
+            // Refresh active dot state
+            const newSwatches = buildColorSwatches(newHex, arguments.callee);
+            header.replaceChild(newSwatches, header.lastChild);
+          });
+
+          header.appendChild(dayLabel);
+          header.appendChild(swatches);
+
+          // Sticky note writing textarea
+          const textarea = document.createElement('textarea');
+          textarea.className = 'day-note-textarea';
+          textarea.spellcheck = true;
+          textarea.placeholder = `Sticky notes for ${day}...`;
+          textarea.setAttribute('aria-label', `${day} notes`);
+          textarea.value = week.days[day] || '';
+
+          // Footer: Word/char count + Zoom/Focus button
+          const footer = document.createElement('div');
+          footer.className = 'day-note-footer';
+
+          const countSpan = document.createElement('span');
+          countSpan.textContent = formatWordCharCount(textarea.value);
+
+          const zoomBtn = document.createElement('button');
+          zoomBtn.type = 'button';
+          zoomBtn.className = 'focus-expand-btn';
+          zoomBtn.textContent = 'Expand ↗';
+          zoomBtn.title = `Focus on ${day}`;
+          zoomBtn.addEventListener('click', () => {
+            currentDay = day;
+            setViewMode('focus');
+          });
+
+          textarea.addEventListener('input', e => {
+            week.days[day] = e.target.value;
+            countSpan.textContent = formatWordCharCount(e.target.value);
+            saveWeeks();
+          });
+
+          footer.appendChild(countSpan);
+          footer.appendChild(zoomBtn);
+
+          noteCard.appendChild(header);
+          noteCard.appendChild(textarea);
+          noteCard.appendChild(footer);
+
+          stickyBoardGrid.appendChild(noteCard);
+        });
+      }
+
+      // Render Focus Single-Note Mode
+      function renderFocusView() {
+        const week = weeks.find(w => w.id === currentWeekId);
+        if (!week) return;
+
+        // Render colored day tabs
+        focusDayTabs.textContent = '';
+        DAYS.forEach(day => {
+          const dayColor = (week.dayColors && week.dayColors[day]) || DEFAULT_DAY_COLORS[day];
+          const tab = document.createElement('button');
+          tab.type = 'button';
+          tab.className = 'focus-tab' + (day === currentDay ? ' active' : '');
+          tab.style.backgroundColor = dayColor;
+          tab.setAttribute('role', 'tab');
+          tab.setAttribute('aria-selected', day === currentDay ? 'true' : 'false');
+
+          const dot = document.createElement('span');
+          const hasText = week.days[day] && week.days[day].trim().length > 0;
+          dot.className = 'tab-dot' + (hasText ? ' has-content' : '');
+
+          const textSpan = document.createElement('span');
+          textSpan.textContent = day;
+
+          tab.appendChild(dot);
+          tab.appendChild(textSpan);
+
+          tab.addEventListener('click', () => {
+            currentDay = day;
+            renderFocusView();
+            focusTextarea.focus();
+          });
+
+          focusDayTabs.appendChild(tab);
+        });
+
+        // Update active sticky sheet
+        const activeColor = (week.dayColors && week.dayColors[currentDay]) || DEFAULT_DAY_COLORS[currentDay];
+        focusStickySheet.style.backgroundColor = activeColor;
+        focusDayLabel.textContent = currentDay;
+        focusTextarea.placeholder = `Jot down sticky notes for ${currentDay}...`;
+        focusTextarea.value = week.days[currentDay] || '';
+        focusWordCount.textContent = formatWordCharCount(focusTextarea.value);
+
+        focusColorSwatches.textContent = '';
+        const swatches = buildColorSwatches(activeColor, newHex => {
+          week.dayColors[currentDay] = newHex;
+          saveWeeks();
+          renderFocusView();
+        });
+        focusColorSwatches.appendChild(swatches);
+      }
+
+      // Copy entire week's non-empty notes to clipboard
+      function copyWeekToClipboard() {
+        const currentWeek = weeks.find(w => w.id === currentWeekId);
+        if (!currentWeek) return;
+
+        const parts = [`=== ${currentWeek.title} ===\n`];
+        let hasAnyNotes = false;
+
+        DAYS.forEach(day => {
+          const content = currentWeek.days[day] ? currentWeek.days[day].trim() : '';
+          if (content) {
+            hasAnyNotes = true;
+            parts.push(`📌 ${day}\n${content}\n`);
+          }
+        });
+
+        if (!hasAnyNotes) {
+          showToast('No sticky notes to copy yet!');
+          return;
+        }
+
+        const fullText = parts.join('\n').trim();
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(fullText).then(() => {
+            showToast('Copied week sticky notes to clipboard!');
+          }).catch(() => {
+            fallbackCopyText(fullText);
+          });
+        } else {
+          fallbackCopyText(fullText);
+        }
+      }
+
+      function fallbackCopyText(text) {
+        const hiddenArea = document.createElement('textarea');
+        hiddenArea.value = text;
+        hiddenArea.style.position = 'fixed';
+        hiddenArea.style.top = '-9999px';
+        hiddenArea.style.left = '-9999px';
+        document.body.appendChild(hiddenArea);
+        hiddenArea.select();
+        try {
+          document.execCommand('copy');
+          showToast('Copied week sticky notes to clipboard!');
+        } catch (err) {
+          showToast('Failed to copy to clipboard.');
+        } finally {
+          document.body.removeChild(hiddenArea);
+        }
+      }
+
+      // Event Wiring
+      newWeekBtn.addEventListener('click', createNewWeek);
+      emptyNewWeekBtn.addEventListener('click', createNewWeek);
+      backToWeeksBtn.addEventListener('click', showHomeView);
+      copyWeekBtn.addEventListener('click', copyWeekToClipboard);
+
+      modeBoardBtn.addEventListener('click', () => setViewMode('board'));
+      modeFocusBtn.addEventListener('click', () => setViewMode('focus'));
+
+      weekTitleHeading.addEventListener('input', e => {
+        const currentWeek = weeks.find(w => w.id === currentWeekId);
+        if (currentWeek) {
+          currentWeek.title = e.target.value.trim() || 'Untitled Week';
+          saveWeeks();
+        }
+      });
+
+      weekTitleHeading.addEventListener('blur', e => {
+        if (!e.target.value.trim()) {
+          e.target.value = 'Untitled Week';
+          const currentWeek = weeks.find(w => w.id === currentWeekId);
+          if (currentWeek) {
+            currentWeek.title = 'Untitled Week';
+            saveWeeks();
+          }
+        }
+      });
+
+      focusTextarea.addEventListener('input', e => {
+        const currentWeek = weeks.find(w => w.id === currentWeekId);
+        if (currentWeek) {
+          currentWeek.days[currentDay] = e.target.value;
+          saveWeeks();
+          focusWordCount.textContent = formatWordCharCount(e.target.value);
+          // Update content dot on active tab without rebuilding whole view
+          const activeTabDot = focusDayTabs.querySelector('.focus-tab.active .tab-dot');
+          if (activeTabDot) {
+            activeTabDot.classList.toggle('has-content', e.target.value.trim().length > 0);
+          }
+        }
+      });
+
+      // Modal events
+      modalCancelBtn.addEventListener('click', closeDeleteModal);
+      modalConfirmBtn.addEventListener('click', confirmDeleteWeek);
+      deleteModal.addEventListener('click', e => {
+        if (e.target === deleteModal) closeDeleteModal();
+      });
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && deleteModal.classList.contains('open')) {
+          closeDeleteModal();
+        }
+      });
+
+      // Initialize Application
+      weeks = loadWeeks();
+      renderHomeView();
+    })();
+  </script>
+</body>
+</html>

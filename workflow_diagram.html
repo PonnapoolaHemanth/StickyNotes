@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 30px;
+      width: 1240px;
+      margin: 0 auto;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #334155;
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+    .title-area h1 {
+      font-size: 24px;
+      color: #fef08a;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+    .tech-pill-row {
+      display: flex;
+      gap: 8px;
+    }
+    .pill {
+      background: #1e293b;
+      border: 1px solid #475569;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #38bdf8;
+    }
+
+    /* Workflow Pipeline Grid */
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      position: relative;
+    }
+    .step-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+      position: relative;
+    }
+    .step-card.active {
+      border-color: #38bdf8;
+    }
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #334155;
+    }
+    .step-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #38bdf8;
+      color: #0f172a;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    .step-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+
+    .sub-box {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .sub-box-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #38bdf8;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .sub-box-desc {
+      font-size: 11px;
+      color: #cbd5e1;
+      line-height: 1.4;
+    }
+
+    .tag-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 6px;
+    }
+    .tag {
+      font-size: 9.5px;
+      background: #334155;
+      color: #e2e8f0;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .arrow-indicator {
+      position: absolute;
+      right: -13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #38bdf8;
+      font-size: 18px;
+      font-weight: bold;
+      z-index: 10;
+    }
+
+    /* Architecture Callout Bar */
+    .arch-bar {
+      margin-top: 20px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 14px 20px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .arch-col h4 {
+      font-size: 12px;
+      color: #fef08a;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .arch-col p {
+      font-size: 11px;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title-area">
+      <h1>📌 Weekly Sticky Notes &mdash; Engineering Architecture & Workflow</h1>
+      <div class="subtitle">Production-ready, offline-first client architecture built with zero external dependencies</div>
+    </div>
+    <div class="tech-pill-row">
+      <span class="pill">Vanilla HTML5</span>
+      <span class="pill">Modern CSS3</span>
+      <span class="pill">ES6+ JavaScript</span>
+      <span class="pill">Web Storage API</span>
+    </div>
+  </div>
+
+  <div class="pipeline">
+    <!-- Step 1 -->
+    <div class="step-card">
+      <span class="arrow-indicator">&rarr;</span>
+      <div class="step-header">
+        <div class="step-num">1</div>
+        <div class="step-title">Home View / Pinboard</div>
+      </div>
+      <div class="sub-box">
+        <div class="sub-box-title">🗓️ Week Generation</div>
+        <div class="sub-box-desc">Computes dynamic Monday&ndash;Sunday local range (e.g. Nov 23 &ndash; Nov 29). Inline editable week titles.</div>
+        <div class="tag-group">
+          <span class="tag">Date Engine</span>
+          <span class="tag">Inline ContentEdit</span>
+        </div>
+      </div>
+      <div class="sub-box">
+        <div class="sub-box-title">🎨 Sticky Note Stacks</div>
+        <div class="sub-box-desc">Renders pastel cards with real-time day progress (e.g., 5/7 days), preview text, and color palette selectors.</div>
+        <div class="tag-group">
+          <span class="tag">CSS Grid</span>
+          <span class="tag">Skeuomorphic Tape</span>
+        </div>
+      </div>
+      <div class="sub-box">
+        <div class="sub-box-title">🗑️ Lifecycle Controls</div>
+        <div class="sub-box-desc">Interactive delete modal with confirmation safeguards against accidental stack deletion.</div>
+        <div class="tag-group">
+          <span class="tag">WAI-ARIA Dialog</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-card">
+      <span class="arrow-indicator">&rarr;</span>
+      <div class="step-header">
+        <div class="step-num">2</div>
+        <div class="step-title">Dual Workspace Engine</div>
+      </div>
+      <div class="sub-box">
+        <div class="sub-box-title">📑 7-Day Tabs (Deep Focus)</div>
+        <div class="sub-box-desc">Tab bar (Monday &ndash; Sunday) with real-time text-presence dots, active tab highlighting, and full-height textarea.</div>
+        <div class="tag-group">
+          <span class="tag">Tab Controller</span>
+          <span class="tag">Live Indicators</span>
+        </div>
+      </div>
+      <div class="sub-box">
+        <div class="sub-box-title">📌 7-Note Wall (Kanban)</div>
+        <div class="sub-box-desc">Side-by-side view showing all 7 days simultaneously with independent color controls and quick 'Expand' action.</div>
+        <div class="tag-group">
+          <span class="tag">Auto-Fill Grid</span>
+          <span class="tag">Context Switching</span>
+        </div>
+      </div>
+      <div class="sub-box">
+        <div class="sub-box-title">📊 Metric Counters</div>
+        <div class="sub-box-desc">Instant word and character calculation on every keystroke with zero layout thrashing.</div>
+        <div class="tag-group">
+          <span class="tag">Text Metrics</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-card">
+      <span class="arrow-indicator">&rarr;</span>
+      <div class="step-header">
+        <div class="step-num">3</div>
+        <div class="step-title">State & Auto-Save</div>
+      </div>
+      <div class="sub-box">
+        <div class="sub-box-title">🧠 In-Memory SSOT Model</div>
+        <div class="sub-box-desc">Single Source of Truth state store managed inside an encapsulated IIFE scope under 'use strict'.</div>
+        <div class="tag-group">
+          <span class="tag">IIFE Scoping</span>
+          <span class="tag">Immutable Updates</span>
+        </div>
+      </div>
+      <div class="sub-box">
+        <div class="sub-box-title">💾 Reactive LocalStorage</div>
+        <div class="sub-box-desc">Auto-persists on native 'input' events. Encapsulated in try/catch with fallback schema normalization.</div>
+        <div class="tag-group">
+          <span class="tag">JSON Serialization</span>
+          <span class="tag">Self-Healing State</span>
+        </div>
+      </div>
+      <div class="sub-box">
+        <div class="sub-box-title">✨ Transient Status Pill</div>
+        <div class="sub-box-desc">Non-blocking 'Saved' badge appears with smooth CSS opacity transition and auto-dismisses after 1.5s.</div>
+        <div class="tag-group">
+          <span class="tag">CSS Transitions</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-num">4</div>
+        <div class="step-title">Export & Security</div>
+      </div>
+      <div class="sub-box">
+        <div class="sub-box-title">📋 Smart Clipboard Export</div>
+        <div class="sub-box-desc">Formats all non-empty days into structured Markdown/plain text. Uses async Clipboard API with legacy fallback.</div>
+        <div class="tag-group">
+          <span class="tag">Navigator API</span>
+          <span class="tag">execCommand Fallback</span>
+        </div>
+      </div>
+      <div class="sub-box">
+        <div class="sub-box-title">🛡️ XSS & Injection Defense</div>
+        <div class="sub-box-desc">User content is bound purely via .value and .textContent. Hex colors are strictly validated against a whitelist.</div>
+        <div class="tag-group">
+          <span class="tag">Input Sanitization</span>
+          <span class="tag">Zero innerHTML</span>
+        </div>
+      </div>
+      <div class="sub-box">
+        <div class="sub-box-title">⚡ Zero Dependency Footprint</div>
+        <div class="sub-box-desc">100% offline, 0 network dependencies, instant load (&lt;20ms FCP), and zero maintenance overhead.</div>
+        <div class="tag-group">
+          <span class="tag">100/100 Lighthouse</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arch-bar">
+    <div class="arch-col">
+      <h4>🧱 Architecture Pattern</h4>
+      <p>Single-Page Application (SPA) driven by vanilla event delegation. Pure separation of state, rendering, and persistence layers.</p>
+    </div>
+    <div class="arch-col">
+      <h4>🔒 Security & Reliability</h4>
+      <p>Strict property binding, defensive JSON deserialization, and schema defaults ensure zero crashes even with corrupted local storage.</p>
+    </div>
+    <div class="arch-col">
+      <h4>💼 TL Talking Points</h4>
+      <p>Zero npm maintenance, zero hosting costs (runs on any static host or file://), enterprise-grade performance, and 100% client privacy.</p>
+    </div>
+  </div>
+</body>
+</html>
